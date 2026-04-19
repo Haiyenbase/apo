@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apohair — Hiệu Suất Sale</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --r:#BF3060; --r2:#D96888; --rp:#FDF0F4; --rm:#F0C0CE;
+  --ink:#180E12; --ink2:#3E2430; --mu:#8A6A74; --bd:#EAE0E5;
+  --bg:#F6F1F3; --wh:#fff;
+  --t:#0A7A68; --tl:#D0F0E8;
+  --a:#B86A08; --al:#FDEBD0;
+  --b:#1848A0; --bl2:#D4E0F8;
+  --p:#5438AE; --pl:#EDE8FA;
+  --g:#5A7A5A;
+  --ff:'Plus Jakarta Sans',sans-serif;
+  --fs:'Instrument Serif',serif;
+}
+body{font-family:var(--ff);background:var(--bg);color:var(--ink);min-height:100vh}
+
+.pg{display:none;flex-direction:column;min-height:100vh}
+.pg.on{display:flex}
+
+/* ── HEADER ── */
+.hdr{
+  background:var(--ink);
+  padding:0 32px;
+  display:flex;align-items:stretch;justify-content:space-between;
+  flex-shrink:0;
+}
+.hdr-l{display:flex;align-items:center;gap:16px;padding:14px 0}
+.logo{font-family:var(--fs);font-size:22px;color:#fff;letter-spacing:1px;font-style:italic}
+.sep{width:1px;height:22px;background:rgba(255,255,255,.15)}
+.hdr-ttl{font-size:12px;color:rgba(255,255,255,.45);font-weight:300}
+.hdr-ttl strong{color:rgba(255,255,255,.85);font-weight:500}
+.hdr-r{display:flex;align-items:center;gap:8px;padding:14px 0}
+.hbadge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);border-radius:4px;padding:3px 11px;font-size:11px;color:rgba(255,255,255,.55);font-weight:300}
+
+/* ── TAB NAV (top, inside header) ── */
+.tabnav{display:flex;align-items:stretch;gap:2px;margin-left:20px}
+.tab{
+  display:flex;align-items:center;gap:7px;
+  padding:0 20px;
+  font-size:12px;font-weight:500;
+  color:rgba(255,255,255,.4);
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  border-top:3px solid transparent;
+  transition:all .2s;
+  letter-spacing:.2px;
+  white-space:nowrap;
+}
+.tab:hover{color:rgba(255,255,255,.75)}
+.tab.on{color:#fff;border-bottom-color:var(--r2)}
+.tab-num{
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;
+  transition:background .2s;
+}
+.tab.on .tab-num{background:var(--r);color:#fff}
+
+/* ── BAND ── */
+.band{padding:9px 32px;display:flex;align-items:center;gap:12px;background:var(--r)}
+.band-name{font-family:var(--fs);font-size:18px;color:#fff;font-style:italic}
+.band-sub{font-size:10.5px;color:rgba(255,255,255,.5);font-weight:300}
+.band-sp{flex:1}
+.bchip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:3px 10px;font-size:11px;color:#fff;font-weight:500}
+
+/* ── BODY ── */
+.body{padding:18px 32px 24px;flex:1}
+
+/* ── KPI ── */
+.kpi6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.kc{background:var(--wh);border-radius:9px;padding:13px 15px 11px;border:1px solid var(--bd);border-top:3px solid var(--r)}
+.kc.t{border-top-color:var(--t)}.kc.a{border-top-color:var(--a)}
+.kc.b{border-top-color:var(--b)}.kc.p{border-top-color:var(--p)}.kc.g{border-top-color:var(--g)}
+.kl{font-size:9.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--mu);margin-bottom:5px;font-weight:400}
+.kv{font-family:var(--fs);font-size:26px;color:var(--ink);line-height:1;font-style:italic}
+.kd{font-size:10.5px;margin-top:3px;font-weight:400}
+.up{color:var(--t)}.dn{color:var(--r)}.ne{color:var(--mu)}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
+.g32{display:grid;grid-template-columns:3fr 2fr;gap:13px;margin-bottom:13px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:13px}
+
+/* ── CARD ── */
+.cd{background:var(--wh);border-radius:9px;padding:15px 17px;border:1px solid var(--bd)}
+.ch{font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.cs{font-size:10.5px;color:var(--mu);margin-bottom:11px;font-weight:300}
+
+/* ── MINI BARS ── */
+.mb{margin-bottom:8px}
+.mb-r{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px}
+.mb-r em{font-style:normal;font-size:10.5px;color:var(--mu)}
+.mb-t{height:5px;background:var(--rp);border-radius:3px;overflow:hidden}
+.mb-f{height:100%;border-radius:3px;background:var(--r)}
+.mb-f.t{background:var(--t)}.mb-f.a{background:var(--a)}
+.mb-f.b{background:var(--b)}.mb-f.p{background:var(--p)}
+
+/* ── FUNNEL ── */
+.fn-step{margin-bottom:6px}
+.fn-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.fn-nm{font-size:12px;font-weight:500}
+.fn-ct{font-size:10.5px;color:var(--mu);font-weight:300}
+.fn-tr{height:22px;background:var(--rp);border-radius:5px;overflow:hidden}
+.fn-fi{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:600;color:#fff}
+.fn-ar{text-align:center;font-size:11px;color:var(--rm);line-height:1.3}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl thead th{text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);border-bottom:1px solid var(--bd);font-weight:500;white-space:nowrap}
+.tbl td{padding:7px 10px;border-bottom:1px solid #F2E8EC;color:var(--ink)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:var(--rp)}
+.tbl tfoot td{font-weight:600;font-size:11.5px;background:var(--bg);border-top:1px solid var(--bd)}
+.rn{width:19px;height:19px;border-radius:50%;font-size:9.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+.g1{background:#FFF3C8;color:#8A6400}.g2r{background:#F0F0F0;color:#505050}.g3r{background:#FDEEE6;color:#8A3A18}
+.gn{background:var(--rp);color:var(--r)}
+.bup{background:var(--tl);color:var(--t);font-size:10px;padding:2px 6px;border-radius:8px;font-weight:500}
+.bdn{background:#FFE4EE;color:var(--r);font-size:10px;padding:2px 6px;border-radius:8px;font-weight:500}
+.tdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;flex-shrink:0}
+
+/* ── TEAM FILTER (p2) ── */
+.tf-row{display:flex;gap:8px;margin-bottom:14px}
+.tf{padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--bd);background:var(--wh);color:var(--mu);font-family:var(--ff);transition:all .18s;font-weight:400}
+.tf:hover{border-color:var(--r2);color:var(--r)}
+.tf.on{color:#fff;font-weight:500}
+.tf.t1.on{background:var(--r);border-color:var(--r)}
+.tf.t2.on{background:var(--t);border-color:var(--t)}
+.tf.t3.on{background:var(--a);border-color:var(--a)}
+.tf.t4.on{background:var(--b);border-color:var(--b)}
+.tf.t5.on{background:var(--p);border-color:var(--p)}
+</style>
+</head>
+<body>
+
+<!-- ══════════ TRANG 1 ══════════ -->
+<div class="pg on" id="p1">
+
+  <div class="hdr">
+    <div class="hdr-l">
+      <div class="logo">Apohair</div>
+      <div class="sep"></div>
+      <div class="hdr-ttl"><strong>Báo Cáo Hiệu Suất Sale</strong> · T6 – T7 / 2025</div>
+      <!-- TABS IN HEADER -->
+      <nav class="tabnav">
+        <div class="tab on" onclick="go(1)">
+          <span class="tab-num">1</span>Tổng Quan
+        </div>
+        <div class="tab" onclick="go(2)">
+          <span class="tab-num">2</span>Nhân Sự Trong Team
+        </div>
+      </nav>
+    </div>
+    <div class="hdr-r">
+      <span class="hbadge">01/06 – 30/07/2025</span>
+      <span class="hbadge">10 nhân sự · 5 team</span>
+    </div>
+  </div>
+
+  <div class="band">
+    <div><div class="band-name">Tổng Quan Hiệu Suất</div><div class="band-sub">Doanh thu · Đơn hàng · Chuyển đổi · SLA · T6–T7/2025</div></div>
+    <div class="band-sp"></div>
+    <span class="bchip">260,182 doanh thu</span>
+    <span class="bchip">3,141 đơn hàng</span>
+    <span class="bchip">4.2% chuyển đổi</span>
+  </div>
+
+  <div class="body">
+
+    <div class="kpi6">
+      <div class="kc"><div class="kl">Doanh thu</div><div class="kv">260K</div><div class="kd up">↑ 18% so kỳ trước</div></div>
+      <div class="kc t"><div class="kl">Đơn hàng</div><div class="kv">3,141</div><div class="kd up">↑ 12%</div></div>
+      <div class="kc a"><div class="kl">Tỷ lệ CĐ</div><div class="kv">4.2%</div><div class="kd up">↑ 0.8%</div></div>
+      <div class="kc b"><div class="kl">Leads tổng</div><div class="kv">8,450</div><div class="kd up">↑ 22%</div></div>
+      <div class="kc p"><div class="kl">SLA trung bình</div><div class="kv">15.49</div><div class="kd ne">phút / cuộc</div></div>
+      <div class="kc g"><div class="kl">% Đạt mục tiêu</div><div class="kv">387%</div><div class="kd up">↑ TB toàn NV</div></div>
+    </div>
+
+    <div class="g32">
+      <div class="cd">
+        <div class="ch">Doanh thu theo thời gian</div>
+        <div class="cs">Thực tế vs mục tiêu vs trung bình công ty</div>
+        <div style="position:relative;height:175px"><canvas id="c1r" role="img" aria-label="DT chart">DT</canvas></div>
+      </div>
+      <div class="cd">
+        <div class="ch">Phễu chuyển đổi</div>
+        <div class="cs">Toàn công ty · T6–T7/2025</div>
+        <div style="margin-top:6px">
+          <div class="fn-step"><div class="fn-hd"><span class="fn-nm">Tiếp cận</span><span class="fn-ct">8,450 leads</span></div><div class="fn-tr"><div class="fn-fi" style="width:100%;background:var(--r)">100%</div></div></div>
+          <div class="fn-ar">↓</div>
+          <div class="fn-step"><div class="fn-hd"><span class="fn-nm">Liên hệ</span><span class="fn-ct">4,820 cuộc gọi</span></div><div class="fn-tr"><div class="fn-fi" style="width:57%;background:#D56888">57%</div></div></div>
+          <div class="fn-ar">↓</div>
+          <div class="fn-step"><div class="fn-hd"><span class="fn-nm">Quan tâm</span><span class="fn-ct">2,210 phản hồi</span></div><div class="fn-tr"><div class="fn-fi" style="width:26%;background:#E898AA">26%</div></div></div>
+          <div class="fn-ar">↓</div>
+          <div class="fn-step"><div class="fn-hd"><span class="fn-nm">Tư vấn</span><span class="fn-ct">1,034 lịch hẹn</span></div><div class="fn-tr"><div class="fn-fi" style="width:12%;background:var(--t);min-width:44px">12%</div></div></div>
+          <div class="fn-ar">↓</div>
+          <div class="fn-step"><div class="fn-hd"><span class="fn-nm">Chốt đơn</span><span class="fn-ct">355 đơn</span></div><div class="fn-tr"><div class="fn-fi" style="width:4.2%;background:var(--b);min-width:44px">4.2%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="cd">
+        <div class="ch">Doanh thu & Đơn hàng theo Team</div>
+        <div class="cs">Doanh thu (cột) vs đơn hàng (đường)</div>
+        <div style="position:relative;height:170px"><canvas id="c1t" role="img" aria-label="Team DT">Team</canvas></div>
+      </div>
+      <div class="cd">
+        <div class="ch">Radar hiệu suất đa chiều</div>
+        <div class="cs">Doanh thu · Chuyển đổi · SLA · Cuộc gọi · % Mục tiêu</div>
+        <div style="position:relative;height:148px"><canvas id="c1rd" role="img" aria-label="Radar">Radar</canvas></div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:8px">
+          <span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:4px"><span class="tdot" style="background:var(--r)"></span>Team 1</span>
+          <span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:4px"><span class="tdot" style="background:var(--t)"></span>Team 2</span>
+          <span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:4px"><span class="tdot" style="background:var(--a)"></span>Team 3</span>
+          <span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:4px"><span class="tdot" style="background:var(--b)"></span>Team 4</span>
+          <span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:4px"><span class="tdot" style="background:var(--p)"></span>Team 5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="g4">
+      <div class="cd">
+        <div class="ch">Tỷ lệ chuyển đổi</div><div class="cs">% chốt đơn / leads</div>
+        <div class="mb"><div class="mb-r"><span>Team 2</span><em>5.1%</em></div><div class="mb-t"><div class="mb-f t" style="width:100%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 4</span><em>4.6%</em></div><div class="mb-t"><div class="mb-f b" style="width:90%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 1</span><em>4.2%</em></div><div class="mb-t"><div class="mb-f" style="width:82%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 3</span><em>3.8%</em></div><div class="mb-t"><div class="mb-f a" style="width:75%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 5</span><em>3.2%</em></div><div class="mb-t"><div class="mb-f p" style="width:63%"></div></div></div>
+      </div>
+      <div class="cd">
+        <div class="ch">SLA trung bình</div><div class="cs">Phút xử lý — thấp = tốt</div>
+        <div class="mb"><div class="mb-r"><span>Team 1</span><em>13.9' ✓</em></div><div class="mb-t"><div class="mb-f t" style="width:70%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 3</span><em>14.6'</em></div><div class="mb-t"><div class="mb-f b" style="width:75%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 2</span><em>15.2'</em></div><div class="mb-t"><div class="mb-f" style="width:78%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 4</span><em>15.5'</em></div><div class="mb-t"><div class="mb-f a" style="width:80%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 5</span><em>17.1' ↑</em></div><div class="mb-t"><div class="mb-f p" style="width:88%"></div></div></div>
+      </div>
+      <div class="cd">
+        <div class="ch">Cuộc gọi CSKH</div><div class="cs">Tổng điểm chạm KH</div>
+        <div class="mb"><div class="mb-r"><span>Team 2</span><em>1,140</em></div><div class="mb-t"><div class="mb-f t" style="width:100%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 4</span><em>1,050</em></div><div class="mb-t"><div class="mb-f b" style="width:92%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 5</span><em>930</em></div><div class="mb-t"><div class="mb-f p" style="width:82%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 1</span><em>880</em></div><div class="mb-t"><div class="mb-f" style="width:77%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 3</span><em>820</em></div><div class="mb-t"><div class="mb-f a" style="width:72%"></div></div></div>
+      </div>
+      <div class="cd">
+        <div class="ch">% Đạt mục tiêu DT</div><div class="cs">Trung bình NV trong team</div>
+        <div class="mb"><div class="mb-r"><span>Team 2</span><em>448%</em></div><div class="mb-t"><div class="mb-f t" style="width:100%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 1</span><em>418%</em></div><div class="mb-t"><div class="mb-f" style="width:93%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 3</span><em>396%</em></div><div class="mb-t"><div class="mb-f a" style="width:88%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 4</span><em>371%</em></div><div class="mb-t"><div class="mb-f b" style="width:83%"></div></div></div>
+        <div class="mb"><div class="mb-r"><span>Team 5</span><em>342%</em></div><div class="mb-t"><div class="mb-f p" style="width:76%"></div></div></div>
+      </div>
+    </div>
+
+    <div class="cd">
+      <div class="ch">Chi tiết hiệu suất theo Team</div>
+      <div class="cs">Tổng hợp các chỉ số chính · T6–T7/2025</div>
+      <table class="tbl">
+        <thead>
+          <tr><th>Team</th><th>Doanh thu</th><th>Đơn hàng</th><th>Khối lượng</th><th>Tỷ lệ CĐ</th><th>SLA TB</th><th>Cuộc gọi</th><th>% Mục tiêu</th><th>Nhân sự</th><th>Xếp hạng</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="tdot" style="background:var(--t)"></span><strong>Team 2</strong></td><td>61,800</td><td>738</td><td>98</td><td><strong style="color:var(--t)">5.1%</strong></td><td>15.2'</td><td>1,140</td><td>448%</td><td>2</td><td><span class="bup">↑ #1</span></td></tr>
+          <tr><td><span class="tdot" style="background:var(--b)"></span><strong>Team 4</strong></td><td>55,900</td><td>651</td><td>77</td><td style="color:var(--b)">4.6%</td><td>15.5'</td><td>1,050</td><td>371%</td><td>2</td><td><span class="bup">↑ #2</span></td></tr>
+          <tr><td><span class="tdot" style="background:var(--r)"></span><strong>Team 1</strong></td><td>52,400</td><td>612</td><td>85</td><td style="color:var(--r)">4.2%</td><td><strong style="color:var(--t)">13.9'</strong></td><td>880</td><td>418%</td><td>2</td><td><span class="bup">↑ #3</span></td></tr>
+          <tr><td><span class="tdot" style="background:var(--a)"></span><strong>Team 3</strong></td><td>48,300</td><td>574</td><td>71</td><td style="color:var(--a)">3.8%</td><td>14.6'</td><td>820</td><td>396%</td><td>2</td><td><span class="bdn">↓ #4</span></td></tr>
+          <tr><td><span class="tdot" style="background:var(--p)"></span><strong>Team 5</strong></td><td>41,700</td><td>566</td><td>71</td><td style="color:var(--r)">3.2%</td><td><strong style="color:var(--r)">17.1'</strong></td><td>930</td><td>342%</td><td>2</td><td><span class="bdn">↓ #5</span></td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td>Tổng công ty</td><td>260,100</td><td>3,141</td><td>402</td><td>4.2%</td><td>15.49'</td><td>4,820</td><td>395%</td><td>10</td><td>—</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════ TRANG 2 ══════════ -->
+<div class="pg" id="p2">
+
+  <div class="hdr">
+    <div class="hdr-l">
+      <div class="logo">Apohair</div>
+      <div class="sep"></div>
+      <div class="hdr-ttl"><strong>Báo Cáo Hiệu Suất Sale</strong> · T6 – T7 / 2025</div>
+      <nav class="tabnav">
+        <div class="tab" onclick="go(1)">
+          <span class="tab-num">1</span>Tổng Quan
+        </div>
+        <div class="tab on" onclick="go(2)">
+          <span class="tab-num">2</span>Nhân Sự Trong Team
+        </div>
+      </nav>
+    </div>
+    <div class="hdr-r">
+      <span class="hbadge">01/06 – 30/07/2025</span>
+      <span class="hbadge">10 nhân sự · 5 team</span>
+    </div>
+  </div>
+
+  <div class="band">
+    <div><div class="band-name">Nhân Sự Trong Team</div><div class="band-sub">So sánh hiệu suất từng thành viên · chọn team để lọc</div></div>
+    <div class="band-sp"></div>
+    <span class="bchip" id="p2chip">Tất cả team</span>
+  </div>
+
+  <div class="body" style="padding-top:14px">
+
+    <div class="tf-row">
+      <button class="tf on"  onclick="filterTeam('all',this)">Tất cả</button>
+      <button class="tf t1"  onclick="filterTeam('1',this)">Team 1</button>
+      <button class="tf t2"  onclick="filterTeam('2',this)">Team 2</button>
+      <button class="tf t3"  onclick="filterTeam('3',this)">Team 3</button>
+      <button class="tf t4"  onclick="filterTeam('4',this)">Team 4</button>
+      <button class="tf t5"  onclick="filterTeam('5',this)">Team 5</button>
+    </div>
+
+    <div class="g2" style="margin-bottom:13px">
+      <div class="cd">
+        <div class="ch">Doanh thu & Đơn hàng theo nhân viên</div>
+        <div class="cs">Sắp xếp theo doanh thu giảm dần</div>
+        <div style="position:relative;height:200px"><canvas id="c2b" role="img" aria-label="NV DT">NV</canvas></div>
+      </div>
+      <div class="cd">
+        <div class="ch">% Đạt mục tiêu & SLA</div>
+        <div class="cs">% mục tiêu (cột) · SLA phút (đường)</div>
+        <div style="position:relative;height:200px"><canvas id="c2s" role="img" aria-label="%MT SLA">MT</canvas></div>
+      </div>
+    </div>
+
+    <div class="cd">
+      <div class="ch">Bảng hiệu suất chi tiết nhân sự</div>
+      <div class="cs">Doanh thu · Đơn hàng · Khối lượng · SLA · Cuộc gọi · % Mục tiêu · Xu hướng</div>
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Nhân viên</th><th>Team</th><th>Doanh thu</th><th>Đơn hàng</th><th>Khối lượng</th><th>SLA</th><th>Cuộc gọi</th><th>% Mục tiêu</th><th>Hạng CQ</th><th>Xu hướng</th></tr></thead>
+        <tbody id="nvBody"></tbody>
+        <tfoot id="nvFoot"></tfoot>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const TC={1:'var(--r)',2:'var(--t)',3:'var(--a)',4:'var(--b)',5:'var(--p)'};
+const TH={1:'#BF3060',2:'#0A7A68',3:'#B86A08',4:'#1848A0',5:'#5438AE'};
+
+const NV=[
+  {rank:1, name:'Bùi Phúc Phương', team:1,rev:19328,orders:150,kl:49,sla:13.86,calls:150,pct:422, rkcq:1, trend:'+4', up:true},
+  {rank:2, name:'Ngô Thanh Hương',  team:2,rev:19274,orders:176,kl:49,sla:15.86,calls:176,pct:474, rkcq:2, trend:'-1', up:false},
+  {rank:3, name:'Hoàng Văn Trang',  team:3,rev:16613,orders:159,kl:37,sla:15.88,calls:159,pct:415, rkcq:3, trend:'+3', up:true},
+  {rank:4, name:'Đỗ Thanh Sơn',     team:4,rev:15543,orders:157,kl:42,sla:15.36,calls:157,pct:265, rkcq:4, trend:'-2', up:false},
+  {rank:5, name:'Trần Trung Phương',team:5,rev:14656,orders:148,kl:35,sla:17.17,calls:148,pct:354, rkcq:5, trend:'-14',up:false},
+  {rank:6, name:'Đỗ Hữu Linh',      team:1,rev:13829,orders:163,kl:36,sla:15.95,calls:163,pct:382, rkcq:6, trend:'+2', up:true},
+  {rank:7, name:'Trần Minh Sơn',    team:2,rev:13789,orders:169,kl:35,sla:14.57,calls:169,pct:418, rkcq:7, trend:'-8', up:false},
+  {rank:8, name:'Nguyễn Hữu Hương', team:3,rev:13782,orders:146,kl:34,sla:15.71,calls:146,pct:null,rkcq:8, trend:'+5', up:true},
+  {rank:9, name:'Lê Trung Hương',   team:4,rev:13316,orders:131,kl:35,sla:13.91,calls:131,pct:null,rkcq:9, trend:'-7', up:false},
+  {rank:10,name:'Hồ Ngọc Trang',    team:5,rev:12785,orders:147,kl:36,sla:15.81,calls:147,pct:null,rkcq:10,trend:'-4', up:false},
+];
+
+function go(n){
+  document.getElementById('p1').classList.toggle('on',n===1);
+  document.getElementById('p2').classList.toggle('on',n===2);
+  if(n===2&&!window._p2init){window._p2init=true;renderTable('all');initCharts('all');}
+}
+
+const rnCls=r=>r===1?'g1':r===2?'g2r':r===3?'g3r':'gn';
+
+function filterTeam(t,btn){
+  document.querySelectorAll('.tf').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('p2chip').textContent=t==='all'?'Tất cả team':'Team '+t;
+  renderTable(t);initCharts(t);
+}
+
+function renderTable(t){
+  const data=t==='all'?NV:NV.filter(d=>String(d.team)===t);
+  document.getElementById('nvBody').innerHTML=data.map(d=>`
+    <tr>
+      <td><span class="rn ${rnCls(d.rank)}">${d.rank}</span></td>
+      <td>${d.name}</td>
+      <td><span class="tdot" style="background:${TC[d.team]}"></span><span style="color:${TC[d.team]};font-weight:500">Team ${d.team}</span></td>
+      <td>${d.rev.toLocaleString()}</td><td>${d.orders}</td><td>${d.kl}</td>
+      <td>${d.sla}</td><td>${d.calls}</td>
+      <td>${d.pct?d.pct+'%':'—'}</td><td>${d.rkcq}</td>
+      <td><span class="${d.up?'bup':'bdn'}">${d.up?'↑':'↓'} ${d.trend}</span></td>
+    </tr>`).join('');
+  const tr=data.reduce((s,d)=>s+d.rev,0),to=data.reduce((s,d)=>s+d.orders,0),
+        tk=data.reduce((s,d)=>s+d.kl,0), tc=data.reduce((s,d)=>s+d.calls,0);
+  document.getElementById('nvFoot').innerHTML=`<tr><td colspan="3">Tổng</td><td>${tr.toLocaleString()}</td><td>${to}</td><td>${tk}</td><td>—</td><td>${tc}</td><td colspan="3">—</td></tr>`;
+}
+
+let cb=null,cs2=null;
+function initCharts(t){
+  const data=t==='all'?NV:NV.filter(d=>String(d.team)===t);
+  const labels=data.map(d=>d.name.split(' ').pop());
+  const bg=data.map(d=>TH[d.team]);
+  const f={size:10,family:'Plus Jakarta Sans'},GD='rgba(80,20,45,.05)';
+
+  if(cb)cb.destroy();
+  cb=new Chart(document.getElementById('c2b'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Doanh thu (K)',data:data.map(d=>+(d.rev/1000).toFixed(1)),backgroundColor:bg,borderRadius:4,yAxisID:'y'},
+      {label:'Đơn hàng',data:data.map(d=>d.orders),type:'line',borderColor:'#C8A0B0',borderWidth:2,pointRadius:4,pointBackgroundColor:bg,fill:false,yAxisID:'y2'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:f,boxWidth:8,padding:10}}},
+      scales:{
+        x:{ticks:{font:f},grid:{display:false}},
+        y:{ticks:{font:f,callback:v=>v+'K'},grid:{color:GD},position:'left'},
+        y2:{ticks:{font:f},grid:{display:false},position:'right'}
+      }}
+  });
+
+  if(cs2)cs2.destroy();
+  cs2=new Chart(document.getElementById('c2s'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'% Mục tiêu',data:data.map(d=>d.pct||0),backgroundColor:bg.map(c=>c+'99'),borderRadius:4,yAxisID:'y'},
+      {label:'SLA (phút)',data:data.map(d=>d.sla),type:'line',borderColor:'#BF3060',borderWidth:2,pointRadius:4,pointBackgroundColor:'#BF3060',fill:false,yAxisID:'y2'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:f,boxWidth:8,padding:10}}},
+      scales:{
+        x:{ticks:{font:f},grid:{display:false}},
+        y:{ticks:{font:f,callback:v=>v+'%'},grid:{color:GD},position:'left'},
+        y2:{ticks:{font:f,callback:v=>v+"'"},min:12,max:20,grid:{display:false},position:'right'}
+      }}
+  });
+}
+
+/* PAGE 1 CHARTS */
+const MU='#8A6A74',GD='rgba(80,20,45,.05)';
+const f={size:10,family:'Plus Jakarta Sans'};
+
+new Chart(document.getElementById('c1r'),{
+  type:'bar',
+  data:{
+    labels:['26/6','25/6','23/6','27/7','24/6','27/6','28/7'],
+    datasets:[
+      {label:'Doanh thu',data:[52,46,44,40,14,10,10],backgroundColor:'#F0C0CE',borderRadius:4,order:2},
+      {label:'Mục tiêu',data:[42,42,42,42,42,42,42],type:'line',borderColor:'#BF3060',borderWidth:2,pointRadius:0,fill:false,order:1},
+      {label:'TB công ty',data:[35,35,35,35,35,35,35],type:'line',borderColor:MU,borderDash:[5,3],borderWidth:1.5,pointRadius:0,fill:false,order:0}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:f,boxWidth:8,padding:10}}},
+    scales:{x:{ticks:{font:f,autoSkip:false},grid:{display:false}},y:{ticks:{font:f,callback:v=>v+'K'},grid:{color:GD}}}}
+});
+
+new Chart(document.getElementById('c1t'),{
+  type:'bar',
+  data:{
+    labels:['Team 1','Team 2','Team 3','Team 4','Team 5'],
+    datasets:[
+      {label:'Doanh thu (K)',data:[52.4,61.8,48.3,55.9,41.7],backgroundColor:['#BF3060','#0A7A68','#B86A08','#1848A0','#5438AE'],borderRadius:5,yAxisID:'y'},
+      {label:'Đơn hàng',data:[612,738,574,651,566],type:'line',borderColor:'#C8A0B0',borderWidth:2,pointRadius:5,pointBackgroundColor:['#BF3060','#0A7A68','#B86A08','#1848A0','#5438AE'],fill:false,yAxisID:'y2'}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:f,boxWidth:8,padding:10}}},
+    scales:{
+      x:{ticks:{font:f},grid:{display:false}},
+      y:{ticks:{font:f,callback:v=>v+'K'},grid:{color:GD},position:'left'},
+      y2:{ticks:{font:f},grid:{display:false},position:'right'}
+    }}
+});
+
+new Chart(document.getElementById('c1rd'),{
+  type:'radar',
+  data:{
+    labels:['Doanh thu','Chuyển đổi','SLA','Cuộc gọi','% Mục tiêu'],
+    datasets:[
+      {data:[85,82,92,77,93],borderColor:'#BF3060',backgroundColor:'rgba(191,48,96,.07)',borderWidth:1.5,pointRadius:2},
+      {data:[100,100,80,100,100],borderColor:'#0A7A68',backgroundColor:'rgba(10,122,104,.07)',borderWidth:1.5,pointRadius:2},
+      {data:[78,75,86,72,88],borderColor:'#B86A08',backgroundColor:'rgba(184,106,8,.06)',borderWidth:1.5,pointRadius:2},
+      {data:[90,90,84,92,83],borderColor:'#1848A0',backgroundColor:'rgba(24,72,160,.06)',borderWidth:1.5,pointRadius:2},
+      {data:[67,63,68,82,76],borderColor:'#5438AE',backgroundColor:'rgba(84,56,174,.06)',borderWidth:1.5,pointRadius:2}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{r:{ticks:{display:false,backdropColor:'transparent'},grid:{color:'rgba(100,40,60,.1)'},pointLabels:{font:f}}}}
+});
+</script>
+</body>
+</html>
